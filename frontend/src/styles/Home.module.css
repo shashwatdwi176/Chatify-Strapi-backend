@@ -1,0 +1,43 @@
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    flex-direction: column;
+  }
+  
+  .main {
+    background: #f3f7ff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .heading {
+    margin-bottom: 15px;
+  }
+  
+  .input {
+    width: 100%;
+    padding: 8px;
+    margin: 5px 0;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+  }
+  
+  .button {
+    padding: 10px 15px;
+    margin-top: 10px;
+    border: none;
+    background: #0070f3;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .message {
+    margin-top: 15px;
+    font-weight: bold;
+    color: green;
+  }
+  
