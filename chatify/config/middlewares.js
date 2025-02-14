@@ -9,4 +9,12 @@ module.exports = [
   'strapi::session',
   'strapi::favicon',
   'strapi::public',
+  {
+    name: "strapi::cors",
+    config: {
+      origin: ["*"], // Allow frontend requests
+      methods: ["GET", "POST", "PUT", "DELETE"],
+      headers: ["Content-Type", "Authorization"],
+    },
+  },
 ];

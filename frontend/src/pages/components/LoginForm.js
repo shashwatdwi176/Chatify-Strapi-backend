@@ -1,11 +1,10 @@
 "use client";
-
 import { useState } from "react";
 import styles from "../../styles/Home.module.css";
 
 export default function LoginForm() {
     const [email, setEmail] = useState("");
-    const [token, setToken] = useState("");
+    const [username, setUsername] = useState("");
     const [message, setMessage] = useState("");
     const [loading, setLoading] = useState(false);
     const [messageType, setMessageType] = useState("");
@@ -17,6 +16,21 @@ export default function LoginForm() {
         setMessageType("");
 
         try {
+            console.log("🔹 Requesting JWT Token...");
+
+            // Fetch the token from API
+            const tokenResponse = await fetch("/api/generateToken", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email }),
+            });
+
+            const tokenData = await tokenResponse.json();
+            if (!tokenResponse.ok) throw new Error(tokenData.error || "Token generation failed");
+
+            console.log("✅ JWT Token Received:", tokenData.token);
+
+            // Authenticate User
             const authResponse = await fetch("/api/auth", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -24,26 +38,22 @@ export default function LoginForm() {
             });
 
             const authData = await authResponse.json();
-            if (!authResponse.ok) {
-                throw new Error(authData.error || "Authentication failed");
-            }
+            if (!authResponse.ok) throw new Error(authData.error || "Authentication failed");
 
-            setToken(authData.token);
-
-            const mailResponse = await fetch("/api/mail", {
+            // Store User in Strapi
+            const strapiResponse = await fetch("/api/storeUser", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, token: authData.token }),
+                body: JSON.stringify({ username, email }),
             });
 
-            const mailData = await mailResponse.json();
-            if (!mailResponse.ok) {
-                throw new Error(mailData.error || "Failed to send email");
-            }
+            const strapiData = await strapiResponse.json();
+            if (!strapiResponse.ok) throw new Error(strapiData.error?.message || "Failed to save user in Strapi");
 
-            setMessage("✅ Verification email sent! Check your inbox.");
+            setMessage("✅ Account created & verification email sent! Check your inbox.");
             setMessageType("success");
         } catch (error) {
+            console.error("❌ Error:", error);
             setMessage(`❌ Error: ${error.message}`);
             setMessageType("error");
         } finally {
@@ -55,6 +65,17 @@ export default function LoginForm() {
         <div className={styles.container}>
             <form className={styles.main} onSubmit={handleSubmit}>
                 <h1 className={styles.heading}>Login to Chatify</h1>
+
+                <label htmlFor="username">Username:</label>
+                <input
+                    type="text"
+                    id="username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                    className={styles.input}
+                    disabled={loading}
+                />
 
                 <label htmlFor="email">Email:</label>
                 <input

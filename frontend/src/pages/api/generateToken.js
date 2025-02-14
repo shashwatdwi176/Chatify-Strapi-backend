@@ -1,15 +1,19 @@
+import jwt from "jsonwebtoken";
+
 export default async function handler(req, res) {
     if (req.method !== "POST") {
         return res.status(405).json({ error: "Method not allowed" });
     }
 
     const { email } = req.body;
+    const SECRET = "this is a secret"; // Change this to a strong secret key!
 
     try {
-        console.log("✅ Authenticating user:", email);
-        return res.status(200).json({ message: "✅ Email verified successfully" });
+        const token = jwt.sign({ email }, SECRET, { expiresIn: "1h" });
+
+        return res.status(200).json({ token });
     } catch (error) {
-        console.error("❌ Authentication Error:", error);
+        console.error("❌ JWT Generation Error:", error);
         return res.status(500).json({ error: "Internal Server Error" });
     }
 }
