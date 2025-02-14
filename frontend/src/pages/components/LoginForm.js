@@ -1,85 +1,78 @@
-"use client"
+"use client";
 
 import { useState } from "react";
-import styles from "../../styles/Home.module.css"
+import styles from "../../styles/Home.module.css";
 
-export default function Home() {
+export default function LoginForm() {
     const [email, setEmail] = useState("");
-    const [user, setUser] = useState("");
+    const [token, setToken] = useState("");
     const [message, setMessage] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [messageType, setMessageType] = useState("");
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
+        setMessage("");
+        setMessageType("");
 
-        let data = {
-            email,
-            message: `Dear User,
-            Welcome to Chatify! 🎉 We're excited to have you on board. Before you start chatting, please verify your email address to secure your account.
-        
-        Click the button below to verify your email:
-        
-        🔹 Verify Email
-        
-        If you didn't sign up for Chatify, please ignore this email.
-        
-        Happy chatting!  
-        - The Chatify Team 🙂`,
-        };
-try {
-    const res = await fetch("/api/mail", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-    });
+        try {
+            const authResponse = await fetch("/api/auth", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email }),
+            });
 
-    const result = await res.json();
+            const authData = await authResponse.json();
+            if (!authResponse.ok) {
+                throw new Error(authData.error || "Authentication failed");
+            }
 
-    if (res.status === 200) {
-        setMessage("✅ Email sent successfully!");
-    } else {
-        setMessage("❌ Error sending email!");
-    }
-} catch (error) {
-    setMessage("❌ Failed to send email!");
-}
+            setToken(authData.token);
 
-setEmail("");
-setUser("");
-  };
+            const mailResponse = await fetch("/api/mail", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, token: authData.token }),
+            });
 
-return (
-    <div className={styles.container}>
-        <form className={styles.main} onSubmit={handleSubmit}>
-            <h1 className={styles.heading}>Login</h1>
+            const mailData = await mailResponse.json();
+            if (!mailResponse.ok) {
+                throw new Error(mailData.error || "Failed to send email");
+            }
 
-            <label htmlFor="user">Username:</label>
-            <input
-                type="text"
-                id="user"
-                value={user}
-                onChange={(e) => setUser(e.target.value)}
-                required
-                className={styles.input}
-            />
+            setMessage("✅ Verification email sent! Check your inbox.");
+            setMessageType("success");
+        } catch (error) {
+            setMessage(`❌ Error: ${error.message}`);
+            setMessageType("error");
+        } finally {
+            setLoading(false);
+        }
+    };
 
-            <label htmlFor="email">Email:</label>
-            <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className={styles.input}
-            />
+    return (
+        <div className={styles.container}>
+            <form className={styles.main} onSubmit={handleSubmit}>
+                <h1 className={styles.heading}>Login to Chatify</h1>
 
-            <button type="submit" className={styles.button}>
-                Submit
-            </button>
+                <label htmlFor="email">Email:</label>
+                <input
+                    type="email"
+                    id="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className={styles.input}
+                    disabled={loading}
+                />
 
-            {message && <p className={styles.message}>{message}</p>}
-        </form>
-    </div>
-);
+                <button type="submit" className={styles.button} disabled={loading}>
+                    {loading ? <span className={styles.loader}></span> : "Verify Email"}
+                </button>
+
+                {message && <p className={`${styles.message} ${styles[messageType]}`}>{message}</p>}
+            </form>
+        </div>
+    );
 }
